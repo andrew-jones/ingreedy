@@ -44,7 +44,7 @@ module Ingreedy
     end
 
     rule(:word_digit) do
-      word_digits.map { |d| stri(d) }.inject(:|) || any
+      word_digits.sort {|a, b| b.size <=> a.size }.map { |d| stri(d) }.inject(:|) || any
     end
 
     rule(:amount) do
