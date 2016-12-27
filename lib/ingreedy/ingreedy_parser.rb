@@ -19,7 +19,7 @@ module Ingreedy
     )
 
     def initialize(original_query)
-      @original_query = original_query
+      @original_query = spaces_cleaned(original_query)
     end
 
     def parse
@@ -28,10 +28,10 @@ module Ingreedy
 
       parslet = RootParser.new(original_query).parse
 
-      result.amount = rationalize parslet[:amount]
+      result.amount = rationalize(parslet[:amount])
       result.amount = [
         result.amount,
-        rationalize(parslet[:amount_end]),
+        rationalize(parslet[:amount_end])
       ] if parslet[:amount_end]
 
       result.container_amount = rationalize(parslet[:container_amount])
@@ -51,6 +51,10 @@ module Ingreedy
 
     private
 
+    def cleaned_amount(amount_str)
+      amount_str.gsub(/[\(\)\'\"]/, '')
+    end
+
     def spaces_cleaned(str)
       # replace all the multiple spaces with single one
       str.gsub(/\s+/, ' ')
@@ -63,16 +67,16 @@ module Ingreedy
     def rationalize(amount)
       return unless amount
       integer = amount[:integer_amount]
-      integer &&= integer.to_s
+      integer &&= cleaned_amount(integer.to_s)
 
       float = amount[:float_amount]
-      float &&= float.to_s
+      float &&= cleaned_amount(float.to_s)
 
       fraction = amount[:fraction_amount]
-      fraction &&= fraction.to_s
+      fraction &&= cleaned_amount(fraction.to_s)
 
       word = amount[:word_integer_amount]
-      word &&= word.to_s
+      word &&= cleaned_amount(word.to_s)
 
       Rationalizer.rationalize(
         integer: integer,
