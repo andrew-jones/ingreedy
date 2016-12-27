@@ -9,15 +9,15 @@ module Ingreedy
     end
 
     rule(:integer) do
-      o_q_b.maybe >> match("[0-9]").repeat(1) >> c_q_b.maybe
+      o_b_q.maybe >> match("[0-9]").repeat(1) >> c_b_q.maybe
     end
 
     rule(:float) do
-      o_q_b.maybe >>
+      o_b_q.maybe >>
       integer.maybe >>
       float_delimiter >>
       integer >>
-      c_q_b.maybe
+      c_b_q.maybe
     end
 
     rule(:float_delimiter) do
@@ -25,7 +25,7 @@ module Ingreedy
     end
 
     rule(:fraction) do
-      o_q_b.maybe >> (compound_simple_fraction | compound_vulgar_fraction) >> c_q_b.maybe
+      o_b_q.maybe >> (compound_simple_fraction | compound_vulgar_fraction) >> c_b_q.maybe
     end
 
     rule(:compound_simple_fraction) do
@@ -34,7 +34,7 @@ module Ingreedy
     end
 
     rule(:simple_fraction) do
-     o_q_b.maybe >> integer >> match("/") >> integer >> c_q_b.maybe
+     o_b_q.maybe >> integer >> match("/") >> integer >> c_b_q.maybe
     end
 
     rule(:compound_vulgar_fraction) do
@@ -47,7 +47,7 @@ module Ingreedy
     end
 
     rule(:word_digit) do
-      o_q_b.maybe >> (word_digits.sort {|a, b| b.size <=> a.size }.map { |d| stri(d) }.inject(:|) || any) >> c_q_b.maybe
+      o_b_q.maybe >> (word_digits.sort {|a, b| b.size <=> a.size }.map { |d| stri(d) }.inject(:|) || any) >> c_b_q.maybe
     end
 
     rule(:amount) do
@@ -57,16 +57,16 @@ module Ingreedy
         word_digit.as(:word_integer_amount) >> whitespace
     end
 
-    rule(:brackets) do
+    rule(:quotes) do
       match("[\"\']").repeat(1)
     end
 
-    rule(:o_q_b) do
-      brackets.maybe >> str("(").maybe >> brackets.maybe # open quate composed with brackets
+    rule(:o_b_q) do
+      quotes.maybe >> str("(").maybe >> quotes.maybe # open quate composed with brackets
     end
 
-    rule(:c_q_b) do
-      brackets.maybe >> str(")").maybe >> brackets.maybe # close quate composed with brackets
+    rule(:c_b_q) do
+      quotes.maybe >> str(")").maybe >> quotes.maybe # close quate composed with brackets
     end
 
     root(:amount)
