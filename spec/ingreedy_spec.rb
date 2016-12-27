@@ -11,6 +11,114 @@ describe Ingreedy, ".parse" do
   end
 end
 
+describe Ingreedy, "multi spacing" do
+  {
+    "1    cup    flour" => 1,
+    "1   1/2   cups flour" => "3/2",
+    "¼    cups flour" => "1/4",
+    "1   ½   cups flour" => "3/2",
+    "1,5   cups flour" => "3/2",
+    "1 (28   ounce)    can crushed   tomatoes" => 1,
+    "3   28 ounce  can crushed tomatoes" => 3,
+    "one 28    ounce can    crushed tomatoes" => 1,
+    "two   five  -   ounce can   crushed tomatoes" => 2,
+    ".25   cups flour" => "1/4",
+    "12oz   tequila" => 12,
+    "1  banana" => 1,
+  }.each do |query, expected|
+    it "correctly parses queries with multi spaces" do
+      expect(Ingreedy.parse(query)).to parse_the_amount(expected.to_r)
+    end
+  end
+end
+
+describe Ingreedy, "composed brackets/quates" do
+  {
+    "(1) cup flour" => 1,
+    "'(1)' cup flour" => 1,
+    "('1') cup flour" => 1,
+    "(\"1\") cup flour" => 1,
+    "\"(1)\" cup flour" => 1,
+    "\"1\" cup flour" => 1,
+    "'1' cup flour" => 1,
+    "(one) cup flour" => 1,
+    "'one' cup flour" => 1,
+    "'(one)' cup flour" => 1,
+    "('one') cup flour" => 1
+  }.each do |query, expected|
+    it "parses correctly for single integer and word-numbers query: '#{query}'" do
+      expect(Ingreedy.parse(query)).to parse_the_amount(expected.to_r)
+    end
+  end
+
+  {
+    "(1/2) cups flour" => "1/2",
+    "('1/2') cups flour" => "1/2",
+    "'(1/2)' cups flour" => "1/2",
+    "(\"1/2\") cups flour" => "1/2",
+    "\"(1/2)\" cups flour" => "1/2",
+    "'1/2' cups flour" => "1/2",
+    "\"1/2\" cups flour" => "1/2",
+    "(1 1/2) cups flour" => "3/2",
+    "(1) (1/2) cups flour" => "3/2",
+    "1 (1/2) cups flour" => "3/2",
+    "(1) 1/2 cups flour" => "3/2",
+    "('1') 1/2 cups flour" => "3/2",
+    "'1 1/2' cups flour" => "3/2",
+    "'1' '1/2' cups flour" => "3/2",
+    "1 '1/2' cups flour" => "3/2",
+    "'1' 1/2 cups flour" => "3/2",
+    "('1 1/2') cups flour" => "3/2",
+    "'(1 1/2)' cups flour" => "3/2",
+    "'(1)' (1/2) cups flour" => "3/2",
+    "(1) '(1/2)' cups flour" => "3/2",
+    "(1) ('1/2') cups flour" => "3/2",
+    "'(1)' ('1/2') cups flour" => "3/2"
+  }.each do |query, expected|
+    it "parses correctly for fractional and integer + fractional query: '#{query}'" do
+      expect(Ingreedy.parse(query)).to parse_the_amount(expected.to_r)
+    end
+  end
+
+  {
+    "(1.5) cups flour" => "3/2",
+    "'1.5' cups flour" => "3/2",
+    "\"1.5\" cups flour" => "3/2",
+    "'(1.5)' cups flour" => "3/2",
+    "('1.5') cups flour" => "3/2",
+    "(1,5) cups flour" => "3/2",
+    "'1,5' cups flour" => "3/2",
+    "\"1,5\" cups flour" => "3/2",
+    "'(1,5)' cups flour" => "3/2",
+    "('1,5') cups flour" => "3/2",
+    "(,5) cups flour" => "1/2",
+    "',5' cups flour" => "1/2",
+    "\",5\" cups flour" => "1/2",
+    "'(,5)' cups flour" => "1/2",
+    "(',5') cups flour" => "1/2",
+    "(.5) cups flour" => "1/2",
+    "'.5' cups flour" => "1/2",
+    "\".5\" cups flour" => "1/2",
+    "'(.5)' cups flour" => "1/2",
+    "('.5') cups flour" => "1/2"
+  }.each do |query, expected|
+    it "parses correctly for float query: '#{query}'" do
+      expect(Ingreedy.parse(query)).to parse_the_amount(expected.to_r)
+    end
+  end
+
+  {
+    "1  ((28) ounce) can crushed tomatoes" => 28,
+    "1  ('28' ounce) can crushed tomatoes" => 28,
+    "1  ('28') ounce can crushed tomatoes" => 28,
+    "1  '(28)' ounce can crushed tomatoes" => 28
+  }.each do |query, expected|
+    it "parses correctly for container amount query: '#{query}'" do
+      expect(Ingreedy.parse(query).container_amount).to eq(expected.to_r)
+    end
+  end
+end
+
 describe Ingreedy, "amount parsing" do
   {
     "1 cup flour" => 1,
