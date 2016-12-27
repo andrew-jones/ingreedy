@@ -26,30 +26,42 @@ module Ingreedy
       result = Result.new
       result.original_query = original_query
 
-      parslet = RootParser.new(original_query).parse
+      begin
+        parslet = RootParser.new(original_query).parse
 
-      result.amount = rationalize(parslet[:amount])
-      result.amount = [
-        result.amount,
-        rationalize(parslet[:amount_end])
-      ] if parslet[:amount_end]
+        result.amount = rationalize(parslet[:amount])
+        result.amount = [
+          result.amount,
+          rationalize(parslet[:amount_end])
+        ] if parslet[:amount_end]
 
-      result.container_amount = rationalize(parslet[:container_amount])
+        result.container_amount = rationalize(parslet[:container_amount])
 
-      result.unit = convert_unit_variation_to_canonical(
-        parslet[:unit].to_s,
-      ) if parslet[:unit]
+        result.unit = convert_unit_variation_to_canonical(
+          parslet[:unit].to_s,
+        ) if parslet[:unit]
 
-      result.container_unit = convert_unit_variation_to_canonical(
-        parslet[:container_unit].to_s,
-      ) if parslet[:container_unit]
+        result.container_unit = convert_unit_variation_to_canonical(
+          parslet[:container_unit].to_s,
+        ) if parslet[:container_unit]
 
-      result.ingredient = parslet[:ingredient].to_s.lstrip.rstrip # TODO: hack
+        result.ingredient = parslet[:ingredient].to_s.lstrip.rstrip # TODO: hack
 
-      result
+        detect_parsing_errors(result)
+      rescue Parslet::ParseFailed => e
+        if after_error_callback
+          after_error_callback.call(e, result)
+        else
+          fail ParseFailed.new(e.message), e.backtrace
+        end
+      end
     end
 
     private
+
+    def after_error_callback
+      Ingreedy.after_error
+    end
 
     def cleaned_amount(amount_str)
       amount_str.gsub(/[\(\)\'\"]/, '')
@@ -61,6 +73,7 @@ module Ingreedy
     end
 
     def convert_unit_variation_to_canonical(unit_variation)
+      return if unit_variation.empty?
       UnitVariationMapper.unit_from_variation(unit_variation)
     end
 
@@ -84,6 +97,16 @@ module Ingreedy
         fraction: fraction,
         word: word,
       )
+    end
+
+    def detect_parsing_errors(result)
+      return result unless after_error_callback
+      parsing_error = Parslet::ParseFailed
+      if result.amount.nil?
+        fail parsing_error.new('amount is not present')
+      elsif result.ingredient.match(/\d/)
+        fail parsing_error.new('ingredient contains numbers')
+      end
     end
   end
 end
