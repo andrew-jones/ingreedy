@@ -51,6 +51,11 @@ module Ingreedy
 
     private
 
+    def spaces_cleaned(str)
+      # replace all the multiple spaces with single one
+      str.gsub(/\s+/, ' ')
+    end
+
     def convert_unit_variation_to_canonical(unit_variation)
       UnitVariationMapper.unit_from_variation(unit_variation)
     end
