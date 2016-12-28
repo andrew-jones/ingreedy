@@ -5,6 +5,8 @@ require File.join(path, "ingreedy_parser")
 require File.join(path, "dictionary_collection")
 
 module Ingreedy
+  class EmptyAmount < Parslet::ParseFailed; end
+  class IncorrectIngredient < Parslet::ParseFailed; end
   ParseFailed = Class.new(StandardError)
 
   class << self
