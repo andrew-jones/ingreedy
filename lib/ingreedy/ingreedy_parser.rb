@@ -47,7 +47,7 @@ module Ingreedy
 
         result.ingredient = parslet[:ingredient].to_s.lstrip.rstrip # TODO: hack
 
-        detect_parsing_errors(result)
+        with_handling_errors_for(result)
       rescue Parslet::ParseFailed => e
         if after_error_callback
           after_error_callback.call(e, result)
@@ -99,13 +99,18 @@ module Ingreedy
       )
     end
 
-    def detect_parsing_errors(result)
+    def with_handling_errors_for(result)
       return result unless after_error_callback
-      parsing_error = Parslet::ParseFailed
+      raise_or result
+    end
+
+    def raise_or(result)
       if result.amount.nil?
-        fail parsing_error.new('amount is not present')
+        raise EmptyAmount.new('amount is not present')
       elsif result.ingredient.match(/\d/)
-        fail parsing_error.new('ingredient contains numbers')
+        raise IncorrectIngredient.new('ingredient contains numbers')
+      else
+        result
       end
     end
   end
